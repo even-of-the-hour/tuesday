@@ -1,4 +1,10 @@
-```{r setup, echo = FALSE}
+---
+title: "When does Tuesday take place?"
+subtitle: "An R for Picturebooks project"
+output: github_document
+---
+
+```{r setup, echo = FALSE, message = FALSE}
 
 library(tidyverse)
 library(suncalc)
@@ -18,7 +24,6 @@ full [Metonic cycle])(https://en.wikipedia.org/wiki/Metonic_cycle) of Tuesdays. 
 We create the object `metonic_cycle` then restrict it to only Tuesdays using `wday()`.
 
 ```{r find-tuesdays}
-
 caldecott_award <- mdy("01-27-1992")
 
 metonic_cycle <- seq.Date(from = caldecott_award - years(19), 
@@ -32,7 +37,6 @@ tuesdays <- metonic_cycle[wday(metonic_cycle) == 3]
 We will use `getSunlighttimes()` which can take a data.frame of dates, latitudes, and longitudes. We have our dates in `tuesdays`, so we just need to use `mutate()` to make a simple tibble with the coordinates for Rayne, LA.
 
 ```{r sunlight-times}
-
 tuesdays_lat_long <- tibble(date = tuesdays) %>%
   mutate(lat = 30.2349,
          lon = -92.2685)
@@ -43,14 +47,12 @@ tuesday_nights <- getSunlightTimes(data = tuesdays_lat_long,
                                   keep = c("night"),
                                   tz = "US/Central") 
 
-# tuesday_nights
 
 ```
 
 `getSunlightTimes()` returns a nice new dataframe which we'll call `tuesday_nights` with all the times when it's full night in Rayne, LA on all the dates of Tuesdays in the 19 year Metonic Cycle we identified. For it to match *Tuesday*, though, it has to be dark by 8pm. ("TUESDAY EVENING, AROUND EIGHT", as the story goes.) We can use `lubridate::hour()` to return just th hour of our `night` variable and `filter()` to days when it's fully dark by 8pm. We'll call that new data frame `tuesday_evening_around_eight`. 
 
 ```{r tuesday_evening_around_eight}
-
 tuesday_evening_around_eight <- 
   tuesday_nights %>%
   filter(hour(night) >= 20) 
@@ -62,7 +64,6 @@ At this point there are `r nrow(tuesday_evening_around_eight)` candidate Tuesday
 But, but!! The moon does have to be above the horizon at 8pm, so the frogs can see it. So we'll do two steps here. First, define `tuesday_full_moons` as Tuesdays (already including only dark-at-8pm Tuesdays) when the moon is full. Second, run those candidate dates through `getMoonPosition` to make sure the moon is visible (i.e., above the horizon).
 
 ```{r tuesday_full_moons}  
-
 tuesday_full_moons <- 
   tuesday_evening_around_eight %>%
   mutate(getMoonIllumination(date = date, keep = "phase")) %>%
@@ -82,7 +83,8 @@ If *Tuesday* takes place in Rayne, LA, then it takes place on September 25, 1984
 
 ```{r dark-tuesday2}
 
-tuesday_full_moons_frogs_can_see %>%
+tuesday_full_moons_frogs_can_see <- 
+  tuesday_full_moons_frogs_can_see %>%
   filter(
       # Above the horizon
       VAL_altitude_deg > 0,
